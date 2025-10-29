@@ -1,0 +1,74 @@
+[
+  {
+    "id": "forteresse",
+    "image": "assets/forteresse.png",
+    "attacker": {
+      "name": "Bélier",
+      "cost": 3,
+      "attack": 3,
+      "hp": 2,
+      "description": "Avance et inflige 1 dégât aux tourelles."
+    },
+    "defender": {
+      "name": "Forteresse",
+      "cost": 3,
+      "attack": 0,
+      "hp": 5,
+      "description": "Bloque une ligne et absorbe 5 dégâts."
+    }
+  },
+  {
+    "id": "archer",
+    "image": "assets/archer.png",
+    "attacker": {
+      "name": "Archer",
+      "cost": 2,
+      "attack": 2,
+      "hp": 1,
+      "description": "Inflige 1 dégât à distance."
+    },
+    "defender": {
+      "name": "Guetteur",
+      "cost": 2,
+      "attack": 1,
+      "hp": 2,
+      "description": "Tire automatiquement sur les unités avancées."
+    }
+  },
+  {
+    "id": "mage",
+    "image": "assets/mage.png",
+    "attacker": {
+      "name": "Pyromancien",
+      "cost": 4,
+      "attack": 4,
+      "hp": 2,
+      "description": "Inflige 2 dégâts à une cible sur sa ligne."
+    },
+    "defender": {
+      "name": "Sorcier de Garde",
+      "cost": 4,
+      "attack": 2,
+      "hp": 3,
+      "description": "Inflige 1 dégât aux attaquants proches chaque tour."
+    }
+  },
+  {
+    "id": "fantassin",
+    "image": "assets/fantassin.png",
+    "attacker": {
+      "name": "Fantassin",
+      "cost": 1,
+      "attack": 1,
+      "hp": 2,
+      "description": "Unité de base peu coûteuse."
+    },
+    "defender": {
+      "name": "Soldat",
+      "cost": 1,
+      "attack": 1,
+      "hp": 3,
+      "description": "Protège la première ligne."
+    }
+  }
+]
