@@ -4,9 +4,9 @@
 const ROWS = 5, COLS = 10;     // 3 (ATT) + 2 (NEUTRAL) + 5 (DEF)
 const ATT = "p1";              // attaquant (à GAUCHE, avance vers la DROITE)
 const DEF = "p2";              // défenseur (à DROITE)
-const MAX_ROUNDS = 20;         // ⚑ Victoire Défenseur à 20 manches
-const STARTING_HAND = 4;       // ⚑ Main de départ
-const MAX_MANA_CAP = 5;
+const MAX_ROUNDS = 20;         // Victoire Défenseur à 20 manches
+const STARTING_HAND = 4;       // Main de départ
+const MAX_MANA_CAP = 10;
 let gameOver = false;
 
 const lanes = document.getElementById("lanes");
@@ -18,35 +18,33 @@ const mana = {
   p1: { max: 1, current: 1 },
   p2: { max: 1, current: 1 }
 };
-
-// + Nouveau : bonus de mana appliqué au prochain tour de chaque joueur
+// Bonus de mana appliqué au prochain tour de chaque joueur (peut dépasser le cap)
 const nextManaBonus = { p1: 0, p2: 0 };
-
 
 // =======================
 //   POOL DE CARTES (ex-JSON intégré)
-//   Ajout: attackType = "melee" | "ranged"
+//   Champs possibles: attackType("melee"/"ranged"), meleeRange, pierce, onHitDraw, onPlayDraw
 // =======================
 const CARDS = [
   { nom: "classique N°1", image: "", type: "placable", indeck: "5",
-    attacker: { cost: 1, attack: 1, hp: 5, attackType: "melee", description: "Corps à corps." },
-    defender: { cost: 1, attack: 1, hp: 1, attackType: "ranged",  description: "À distance." }
+    attacker: { cost: 1, attack: 1, hp: 5, attackType: "melee",  meleeRange: 1, onPlayDraw: 1, description: "En jeu: pioche 1. CAC(1)" },
+    defender: { cost: 1, attack: 1, hp: 1, attackType: "ranged", pierce: 2, onHitDraw: 1, description: "Distance, transperce(2), pioche 1/cible" }
   },
   { nom: "classique N°2", image: "", type: "placable", indeck: "5",
-    attacker: { cost: 2, attack: 2, hp: 9, attackType: "melee",  description: "Corps à corps." },
-    defender: { cost: 2, attack: 2, hp: 2, attackType: "ranged", description: "À distance." }
+    attacker: { cost: 2, attack: 2, hp: 9, attackType: "melee",  meleeRange: 2, description: "CAC(2)" },
+    defender: { cost: 2, attack: 2, hp: 2, attackType: "ranged", description: "Distance" }
   },
   { nom: "classique N°3", image: "", type: "placable", indeck: "5",
-    attacker: { cost: 3, attack: 2, hp: 13, attackType: "melee", description: "Corps à corps." },
-    defender: { cost: 3, attack: 3, hp: 2, attackType: "ranged",  description: "À distance." }
+    attacker: { cost: 3, attack: 2, hp: 13, attackType: "melee", meleeRange: 1, description: "CAC(1)" },
+    defender: { cost: 3, attack: 3, hp: 2, attackType: "ranged", description: "Distance" }
   },
   { nom: "classique N°4", image: "", type: "placable", indeck: "5",
-    attacker: { cost: 4, attack: 4, hp: 17, attackType: "melee",  description: "Corps à corps." },
-    defender: { cost: 4, attack: 4, hp: 3,  attackType: "ranged", description: "À distance." }
+    attacker: { cost: 4, attack: 4, hp: 17, attackType: "melee", meleeRange: 3, description: "CAC(3)" },
+    defender: { cost: 4, attack: 4, hp: 3, attackType: "ranged", description: "Distance" }
   },
   { nom: "classique N°5", image: "", type: "placable", indeck: "5",
-    attacker: { cost: 5, attack: 3, hp: 21, attackType: "melee", description: "Corps à corps." },
-    defender: { cost: 5, attack: 5, hp: 3,  attackType: "ranged",  description: "À distance." }
+    attacker: { cost: 5, attack: 3, hp: 21, attackType: "ranged", pierce: 2, onHitDraw: 1, description: "Distance, transperce(2), pioche 1/cible" },
+    defender: { cost: 5, attack: 5, hp: 3, attackType: "melee", meleeRange: 2, description: "CAC(2)" }
   }
 ];
 
@@ -88,6 +86,25 @@ function readHp(card){ return parseInt(card.querySelector('.hp')?.textContent ||
 function setHp(card, v){ const el = card.querySelector('.hp'); if(el){ el.textContent = String(Math.max(0,v)); } }
 function readType(card){ return (card.dataset.range === "ranged") ? "ranged" : "melee"; }
 function ownerOf(card){ return card?.dataset.owner || null; }
+function readMeleeRange(card){ const v = parseInt(card?.dataset?.meleeRange ?? "1", 10); return Number.isFinite(v) && v>0 ? v : 1; }
+function readPierce(card){ const v = parseInt(card?.dataset?.pierce ?? "0", 10); return Number.isFinite(v) && v>=0 ? v : 0; }
+function readOnHitDraw(card){ const v = parseInt(card?.dataset?.onHitDraw ?? "0", 10); return Number.isFinite(v) && v>=0 ? v : 0; }
+
+// Feedback léger
+function makeToast(msg){
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = `position:fixed;left:50%;top:18px;transform:translateX(-50%);
+    background:#0b1324;color:#f3f7ff;border:1px solid #1d2b4a;padding:8px 12px;border-radius:10px;font-weight:700;z-index:9999;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:.98`;
+  document.body.appendChild(t);
+  setTimeout(()=>{ t.style.transition='opacity .25s'; t.style.opacity='0'; }, 900);
+  setTimeout(()=> t.remove(), 1250);
+}
+function logBonus(player, inc){
+  console.log(`[BONUS] ${player} +${inc} mana (prochain tour)`);
+  makeToast(`+${inc} mana prochain tour (${player === 'p1' ? 'ATT' : 'DEF'})`);
+}
 
 // =======================
 //   DECKS
@@ -164,6 +181,10 @@ function bindSlot(slot){
 
     if(!isSlotEmpty(to)){ cleanupDrag(); return; } // pas de swap pour l’instant
     to.appendChild(dragData.card);
+
+    // Effets à l'entrée en jeu
+    triggerOnPlay(dragData.card);
+
     cleanupDrag();
   });
 }
@@ -210,10 +231,19 @@ function createCard(data){
   const cost = document.createElement('div'); cost.className='cost'; cost.textContent = data.cost; card.appendChild(cost);
   const atk = document.createElement('div'); atk.className='atk'; atk.textContent = data.attack; card.appendChild(atk);
   const hp  = document.createElement('div'); hp.className ='hp';  hp.textContent  = data.hp;  card.appendChild(hp);
-  const info= document.createElement('div'); info.className='info'; info.innerHTML = `<strong>${data.name}</strong><br>${data.description}`; card.appendChild(info);
+  const info= document.createElement('div'); info.className='info'; info.innerHTML = `<strong>${data.name}</strong><br>${data.description || ""}`; card.appendChild(info);
 
   card.dataset.owner = data.owner;
-  card.dataset.range = (data.attackType === "ranged") ? "ranged" : "melee"; // store type
+  card.dataset.range = (data.attackType === "ranged") ? "ranged" : "melee";
+  if (data.attackType === "melee") {
+    card.dataset.meleeRange = String(Math.max(1, parseInt(data.meleeRange ?? 1, 10)));
+  } else {
+    card.dataset.pierce    = String(Math.max(0, parseInt(data.pierce ?? 0, 10)));     // 0 = pas de transpercement
+    card.dataset.onHitDraw = String(Math.max(0, parseInt(data.onHitDraw ?? 0, 10)));  // 0 = ne pioche pas
+  }
+  // onPlay pour toutes
+  card.dataset.onPlayDraw = String(Math.max(0, parseInt(data.onPlayDraw ?? 0, 10)));
+
   card.draggable = true;
 
   // Drag start / end
@@ -236,7 +266,7 @@ function createCard(data){
 // =======================
 function draw(player){
   if(gameOver) return false;
-  // Aucune limite de cartes en main
+  // main illimitée
   if(!decks[player] || decks[player].length === 0){ 
     alert(`Deck ${player.toUpperCase()} vide !`); 
     return false; 
@@ -267,33 +297,47 @@ function discardHand(player){
   layoutHand(player);
 }
 
+// Effet à l'entrée en jeu
+function triggerOnPlay(card){
+  const n = parseInt(card?.dataset?.onPlayDraw ?? "0", 10);
+  if (Number.isFinite(n) && n > 0){
+    const owner = ownerOf(card);
+    drawMany(owner, n);
+  }
+}
+
 // =======================
-//   COMBAT
+//   CIBLES & COMBAT
 // =======================
-// Retourne la première cible dans la ligne, selon type et direction
-function findTarget(row, col, owner, type){
+function getAttackTargets(row, col, owner, type){
   const dir = (owner === ATT) ? +1 : -1;
+  const self = getSlot(row, col)?.firstElementChild;
+  if(!self) return [];
 
   if(type === "melee"){
-    const tc = col + dir;
-    if(!inBounds(tc)) return null;
-    const tslot = getSlot(row, tc);
-    const tcard = tslot?.firstElementChild;
-    if(tcard && ownerOf(tcard) && ownerOf(tcard) !== owner) return tcard;
-    return null;
+    const reach = readMeleeRange(self);
+    for(let step=1; step<=reach; step++){
+      const tc = col + dir*step;
+      if(!inBounds(tc)) return [];
+      const tcard = getSlot(row, tc)?.firstElementChild;
+      if(tcard){
+        return (ownerOf(tcard) !== owner) ? [tcard] : [];
+      }
+    }
+    return [];
   }
 
-  // ranged
+  // ranged: transperce jusqu'à 'pierce' ennemis, alliés bloquent
+  const limit = Math.max(1, readPierce(self) || 0);
+  const targets = [];
   for(let c = col + dir; inBounds(c); c += dir){
-    const s = getSlot(row, c);
-    const card = s?.firstElementChild;
-    if(card){
-      // ligne de vue bloquée par la première unité rencontrée
-      if(ownerOf(card) !== owner) return card; // ennemi -> cible
-      return null; // allié -> tir bloqué
-    }
+    const card = getSlot(row, c)?.firstElementChild;
+    if(!card) continue;
+    if(ownerOf(card) === owner) break;     // allié bloque
+    targets.push(card);                    // ennemi touché
+    if(targets.length >= limit) break;
   }
-  return null;
+  return targets;
 }
 
 function damageCard(card, dmg){
@@ -303,82 +347,67 @@ function damageCard(card, dmg){
   if(after <= 0){
     const parent = card.parentElement;
     if(parent) parent.removeChild(card);
-    return true; // ← mort
+    return true; // mort
   }
-  return false;  // ← encore vivant
+  return false;
 }
-function makeToast(msg){
-  const t = document.createElement('div');
-  t.textContent = msg;
-  t.style.cssText = `
-    position:fixed; left:50%; top:18px; transform:translateX(-50%);
-    background:#0b1324; color:#f3f7ff; border:1px solid #1d2b4a;
-    padding:8px 12px; border-radius:10px; font-weight:700; z-index:9999;
-    box-shadow:0 10px 30px rgba(0,0,0,.35); opacity:.98;`;
-  document.body.appendChild(t);
-  setTimeout(()=>{ t.style.transition='opacity .3s'; t.style.opacity='0'; }, 900);
-  setTimeout(()=> t.remove(), 1300);
-}
-
-function logBonus(player, inc){
-  console.log(`[BONUS] ${player} +${inc} mana pour le prochain tour`);
-  makeToast(`+${inc} mana prochain tour (${player === 'p1' ? 'ATT' : 'DEF'})`);
-}
-
 
 function resolveCombat(side){
   const fired = new Set();
 
   for(let r=0; r<ROWS; r++){
     for(let c=0; c<COLS; c++){
-      const slot = getSlot(r,c);
-      const card = slot?.firstElementChild;
+      const card = getSlot(r,c)?.firstElementChild;
       if(!card) continue;
       if(ownerOf(card) !== side) continue;
 
       const type = readType(card);
       const atk  = readAtk(card) || 0;
 
-      const target = findTarget(r, c, side, type);
-      if(target){
-        const targetOwner = ownerOf(target);
-        const killed = damageCard(target, atk);
-        fired.add(card);
+      const targets = getAttackTargets(r, c, side, type);
+      if(targets.length === 0) continue;
 
-        // Bonus mana pour ATT quand il tue DEF
-        if (killed && side === ATT && targetOwner === DEF) {
-          nextManaBonus.p1 = (nextManaBonus.p1 || 0) + 1;
-          logBonus('p1', 1);
-        }
+      let kills = 0;
+      for(const t of targets){
+        const tOwner = ownerOf(t);
+        const died = damageCard(t, atk);
+        if(died && side === ATT && tOwner === DEF) kills += 1;
       }
+
+      // Bonus mana pour ATT : +1 par kill (dépasse le cap au prochain tour)
+      if(kills > 0 && side === ATT){
+        nextManaBonus.p1 = (nextManaBonus.p1 || 0) + kills;
+        logBonus('p1', kills);
+      }
+
+      // Pioche sur hit (ranged & melee supportés si onHitDraw > 0)
+      const perHit = readOnHitDraw(card);
+      if(perHit > 0){
+        drawMany(side, perHit * targets.length);
+      }
+
+      fired.add(card);
     }
   }
-  return fired;
+
+  return fired; // utile pour "avanceSelective"
 }
-
-
 
 function advanceSelective(excludeSet){
   if(gameOver) return;
   for(let r=0; r<ROWS; r++){
-    for(let c=COLS-2; c>=0; c--){ // partir de l'avant-dernière colonne
+    for(let c=COLS-2; c>=0; c--){
       const cur = getSlot(r,c);
       const card = cur?.firstElementChild;
       if(!card || ownerOf(card) !== ATT) continue;
-
-      // Si la carte a attaqué pendant la résolution, elle N'AVANCE PAS
-      if(excludeSet && excludeSet.has(card)) continue;
+      if(excludeSet && excludeSet.has(card)) continue; // a attaqué => n'avance pas
 
       const right = getSlot(r, c+1);
       if(!right) continue;
-
-      if(!right.firstElementChild){
-        right.appendChild(card);
-      }
+      if(!right.firstElementChild) right.appendChild(card);
     }
   }
 }
-
 
 // =======================
 //   TOUR / MANA / VICTOIRE
@@ -387,25 +416,19 @@ function refreshManaUI(){
   const j1 = document.getElementById('mana-p1');
   const j2 = document.getElementById('mana-p2');
 
-  const cap1 = MAX_MANA_CAP;
-  const cap2 = MAX_MANA_CAP;
-
+  const cap = MAX_MANA_CAP;
   if (j1) {
-    const max = mana.p1.max;
-    const cur = mana.p1.current;
-    j1.textContent = `${cur}/${cap1}${max > cap1 ? ` (+${max - cap1})` : ""}`;
+    const max = mana.p1.max, cur = mana.p1.current;
+    j1.textContent = `${cur}/${cap}${max > cap ? ` (+${max - cap})` : ""}`;
   }
-
   if (j2) {
-    const max = mana.p2.max;
-    const cur = mana.p2.current;
-    j2.textContent = `${cur}/${cap2}${max > cap2 ? ` (+${max - cap2})` : ""}`;
+    const max = mana.p2.max, cur = mana.p2.current;
+    j2.textContent = `${cur}/${cap}${max > cap ? ` (+${max - cap})` : ""}`;
   }
 
   document.querySelector('.hand-att')?.classList.toggle('turn-active', turn.current===ATT);
   document.querySelector('.hand-def')?.classList.toggle('turn-active', turn.current===DEF);
 }
-
 
 function startTurn(player){
   const m = mana[player];
@@ -416,18 +439,15 @@ function startTurn(player){
   // 2) bonus : ajoute librement au-dessus du cap
   if (nextManaBonus[player] > 0) {
     const applied = nextManaBonus[player];
-    m.max += applied;        // ← dépassement autorisé
+    m.max += applied; // dépassement autorisé
     logBonus(player, applied);
     nextManaBonus[player] = 0;
   }
 
   m.current = m.max;
   refreshManaUI();
-  draw(player);
+  draw(player); // pioche auto
 }
-
-
-
 
 function declareWinner(winner){
   gameOver = true;
@@ -444,11 +464,8 @@ function endTurn(){
   turn.current = (turn.current === ATT) ? DEF : ATT;
 
   if (turn.current === ATT) {
-    // Le tour du Défenseur vient de se terminer
-    // 1) PHASE DE RÉSOLUTION : les Attaquants attaquent
+    // Le tour du Défenseur vient de se terminer : RÉSOLUTION ATT puis MOUVEMENT
     const attackersWhoFired = resolveCombat(ATT);
-
-    // 2) MOUVEMENT : seuls les Attaquants qui N'ONT PAS attaqué avancent
     advanceSelective(attackersWhoFired);
 
     // Nouvelle manche
@@ -461,15 +478,13 @@ function endTurn(){
       return;
     }
   } else {
-    // Le tour de l'Attaquant vient de se terminer
-    // → Défenseurs attaquent (résolution côté Défense)
+    // Le tour de l'Attaquant vient de se terminer : RÉSOLUTION DEF
     resolveCombat(DEF);
   }
 
-  // Démarre le tour du joueur actif (pioche auto incluse)
+  // Démarre le tour du joueur actif
   startTurn(turn.current);
 }
-
 
 // =======================
 //   INIT + BOUTONS
@@ -487,7 +502,7 @@ function initGame(){
   $("#discard-p1").onclick = ()=> discardHand(ATT);
   $("#discard-p2").onclick = ()=> discardHand(DEF);
 
-  // ⚠️ Désactivation du bouton “Avancer” et du raccourci clavier
+  // Désactivation du bouton “Avancer” (avance auto)
   const btnAdvance = document.getElementById('advance');
   if (btnAdvance) {
     btnAdvance.disabled = true;
@@ -503,9 +518,13 @@ function initGame(){
   updateDeckLeft('p2');
   updateRoundUI();
 
-  // Démarre le premier tour (pioche automatique incluse)
+  // Démarre le premier tour
   startTurn(turn.current);
 
   relayoutBothHands();
 }
+
+// =======================
+//   BOOT
+// =======================
 initGame();
