@@ -10,14 +10,21 @@
 
   <!-- 🌙☀️ MENU PRINCIPAL -->
   <div id="menu-screen">
-    <h1>⚔️ Lune vs Soleil – Bataille Astrale ⚔️</h1>
+    <div class="menu-topbar">
+      <h1 id="game-title">🗡️ Lune vs Soleil – Bataille Astrale 🗡️</h1>
+      <button id="burger" class="burger" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="menu-drawer">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
     <p class="subtitle">Choisissez votre voie et affrontez les forces opposées de la lumière et de l’ombre.</p>
+
     <div class="menu-buttons">
-      <button id="btn-build">🎴 Créer un deck</button>
-      <button id="btn-gallery">📚 Voir les cartes</button>
-      <button id="btn-rules">⚙️ Règles</button>
-      <button id="btn-start">🕹️ Lancer une partie</button>
-      <button id="btn-credits">💠 Crédits</button>
+      <button id="btn-build"   class="btn">🧱 Créer un deck</button>
+      <button id="btn-gallery" class="btn">🗂️ Voir les cartes</button>
+      <button id="btn-rules"   class="btn">📜 Règles</button>
+      <button id="btn-start"   class="btn btn-primary">🎮 Lancer une partie</button>
+      <button id="btn-credits" class="btn">💎 Crédits</button>
     </div>
   </div>
 
@@ -82,10 +89,10 @@
   <div id="credits" class="hidden">
     <h2>💠 Crédits</h2>
     <p><strong>Lune vs Soleil – Bataille Astrale</strong></p>
-    <p>Prototype créé par <b>Loïc Marion</b> & <b>ChatGPT (OpenAI)</b></p>
+    <p>Prototype créé par <b>Axel Marion</b> & <b>Nicola Sedano</b> & <b>Aurélien Colombelli</b></p>
     <p>Développement : 2025</p>
-    <p>Code & mécaniques : ChatGPT</p>
-    <p>Univers & équilibrage : Loïc Marion</p>
+    <p>Code : Axel Marion</p>
+    <p>Mecanique & équilibrage : Axel Marion & Nicola Sedano & Aurélien Colombelli</p>
     <p>Thème visuel : Ambiance bleue et dorée minimaliste</p>
     <button class="back" onclick="showScreen('menu-screen')">⬅ Retour</button>
   </div>
@@ -102,6 +109,29 @@
       <div class="battlefield">
         <div id="lanes" class="lanes"></div>
       </div>
+      
+      <!-- Inspecteur de carte -->
+      <aside id="inspector" class="hidden">
+        <div class="insp-title">—</div>
+        <div class="insp-body">
+          <div class="insp-stats">
+            <span class="type-label">Type:</span>
+            <span class="type-val" id="insp-type">—</span>
+            <br>
+            <span class="atk-label">ATK</span> <span class="atk-val" id="insp-atk">—</span>
+            <span class="hp-label">HP</span> <span class="hp-val" id="insp-hp">—</span>
+          </div>
+          <div class="sep"></div>
+          <div class="muted" id="insp-owner">—</div>
+          <div class="sep"></div>
+          <div id="insp-desc">—</div>
+          <div class="sep"></div>
+          <div class="kw">
+            <b>Mots-clés :</b>
+            <div id="insp-kw">—</div>
+          </div>
+        </div>
+      </aside>
 
       <!-- Mains -->
       <div class="hand-container">
@@ -124,6 +154,7 @@
         </div>
       </div>
     </div>
+    <button class="back" onclick="showScreen('menu-screen')">⬅ Abandon</button>
   </div>
 
   <script src="script.js"></script>

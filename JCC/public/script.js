@@ -198,18 +198,32 @@ buildBoard();
 function createCard(data){
   const card=document.createElement('div');
   card.className=`card ${data.owner===ATT?'att':'def'}`;
+
   const overlay=document.createElement('div'); overlay.className='overlay'; card.appendChild(overlay);
   const cost=document.createElement('div'); cost.className='cost'; cost.textContent=data.cost; card.appendChild(cost);
   const atk=document.createElement('div'); atk.className='atk'; atk.textContent=data.attack; card.appendChild(atk);
   const hp=document.createElement('div'); hp.className='hp'; hp.textContent=data.hp; card.appendChild(hp);
-  const info=document.createElement('div'); info.className='info'; info.innerHTML=`<strong>${data.name}</strong><br>${data.description}`; card.appendChild(info);
-  card.dataset.owner=data.owner;
-  card.dataset.range=data.attackType;
+  const info=document.createElement('div'); info.className='info';
+  info.innerHTML=`<strong>${data.name}</strong><br>${data.description}`; card.appendChild(info);
+
+  // ✅ Datas utiles pour l’inspecteur
+  card.dataset.owner=data.owner;                      // 'p1' | 'p2'
+  card.dataset.range=(data.attackType||'melee');      // 'melee' | 'ranged'
+  card.dataset.name=data.name;
+  card.dataset.desc=data.description || '';
+  card.dataset.keywords=(data.keywords||[]).join(', ');
+
   card.draggable=true;
   card.addEventListener('dragstart',()=>{ if(gameOver)return; dragData.card=card; dragData.from=card.parentElement; card.classList.add('dragging'); setAllSlotsHighlight('ok'); });
   card.addEventListener('dragend',cleanupDrag);
+
+  // ✅ Survol → affiche panneau
+  card.addEventListener('mouseenter', ()=> showInspector(card));
+  card.addEventListener('mouseleave', hideInspector);
+
   return card;
 }
+
 
 // =======================
 //   DRAG & DROP
@@ -227,69 +241,222 @@ function cleanupDrag(){
   if(dragData.card)dragData.card.classList.remove('dragging');
   dragData.card=null; dragData.from=null;
 }
+
+// 🔧 Supprime la rotation/éventail d'une carte quand elle est posée sur le plateau
+function normalizeCardForBoard(card){
+  // enlève toutes les traces de l'éventail/anim
+  card.classList.add('onboard');
+  card.classList.remove('spawn', 'dragging');
+  card.style.transform = 'none';
+  card.style.position  = '';
+  card.style.left = '';
+  card.style.bottom = '';
+  card.style.removeProperty('--i');
+}
+
+
 function bindSlot(slot){
-  slot.addEventListener('dragover',e=>{
-    if(!dragData.card||gameOver)return;
+  slot.addEventListener('dragover', (e)=>{
+    if(!dragData.card || gameOver) return;
     e.preventDefault();
-    slot.setAttribute('data-highlight',isSlotEmpty(slot)?'ok':'bad');
+    slot.setAttribute('data-highlight', isSlotEmpty(slot) ? 'ok' : 'bad');
   });
-  slot.addEventListener('dragleave',()=>slot.removeAttribute('data-highlight'));
-  slot.addEventListener('drop',e=>{
+
+  slot.addEventListener('dragleave', ()=>{
+    slot.removeAttribute('data-highlight');
+  });
+
+  slot.addEventListener('drop', (e)=>{
     e.preventDefault();
-    if(!dragData.card||gameOver)return;
-    const to=slot,from=dragData.from;
-    const fromHand=from && (from.id==='hand-p1'||from.id==='hand-p2');
+    if(!dragData.card || gameOver) return;
+
+    const to   = slot;
+    const from = dragData.from;
+
+    // 🖐️ Si on vient d'une main, vérifier zone, tour et mana
+    const fromHand = from && (from.id === 'hand-p1' || from.id === 'hand-p2');
     if(fromHand){
-      const owner=dragData.card.dataset.owner;
-      if(to.dataset.owner!==owner){alert("Tu ne peux poser une carte que dans ta zone !"); cleanupDrag(); return;}
-      if(owner!==turn.current){alert("Ce n'est pas ton tour !"); cleanupDrag(); return;}
-      const cost=parseInt(dragData.card.querySelector('.cost').textContent);
-      if(cost>mana[owner].current){alert("Mana insuffisant !"); cleanupDrag(); return;}
-      mana[owner].current-=cost;
+      const owner = dragData.card.dataset.owner;        // "p1" | "p2"
+
+      // Zone autorisée (ne poser que sur SON terrain)
+      if(to.dataset.owner !== owner){
+        alert("Tu ne peux poser une carte que dans ta zone !");
+        cleanupDrag();
+        return;
+      }
+
+      // Tour du bon joueur
+      if(owner !== turn.current){
+        alert("Ce n'est pas ton tour !");
+        cleanupDrag();
+        return;
+      }
+
+      // Mana suffisant
+      const cost = parseInt(dragData.card.querySelector('.cost')?.textContent || "0", 10);
+      if(cost > mana[owner].current){
+        alert("Mana insuffisant !");
+        cleanupDrag();
+        return;
+      }
+
+      // Dépense de mana + retrait de la main
+      mana[owner].current -= cost;
       refreshManaUI();
-      state.hands[owner]=state.hands[owner].filter(x=>x!==dragData.card);
+      state.hands[owner] = state.hands[owner].filter(x => x !== dragData.card);
+      layoutHand(owner);
+    }else{
+      // Déplacement de carte déjà posée → autorisé uniquement pendant le tour du propriétaire
+      const owner = dragData.card.dataset.owner;
+      if(owner !== turn.current){
+        cleanupDrag();
+        return;
+      }
+      // Empêche de déplacer dans la zone adverse
+      if(to.dataset.owner !== owner && to.dataset.owner !== "neutral"){
+        cleanupDrag();
+        return;
+      }
     }
-    if(!isSlotEmpty(to)){cleanupDrag();return;}
+
+    // Case déjà occupée ? (pas de stack)
+    if(!isSlotEmpty(to)){
+      cleanupDrag();
+      return;
+    }
+
+    // Déposer la carte
     to.appendChild(dragData.card);
+
+    // ✅ Normalise l'apparence une fois sur le plateau (plus de rotation de la main)
+    normalizeCardForBoard(dragData.card);
+
     cleanupDrag();
   });
 }
 
+
 // =======================
 //   PIOCHE
 // =======================
+// --- PIOCHE / MAIN ---
 function draw(player){
-  if(gameOver)return false;
-  if(!decks[player]||decks[player].length===0){return false;}
-  const base=decks[player].pop();
-  const face=(player===ATT)?base.attacker:base.defender;
-  const cardData={...deepClone(face),owner:player,name:base.nom};
-  const card=createCard(cardData);
-  state.hands[player].push(card);
-  const hand=document.getElementById(`hand-${player}`);
-  hand.appendChild(card);
+  if (gameOver) return false;
+  if (!decks[player] || decks[player].length === 0) return false;
+
+  // 1) sortir une entrée du deck et construire la face correcte
+  const base = decks[player].pop();
+  const face = (player === ATT) ? base.attacker : base.defender;
+  const cardData = { ...deepClone(face), owner: player, name: base.nom };
+
+  // 2) créer l’élément DOM *avant* toute utilisation
+  const cardEl = createCard(cardData);
+
+  // 3) état pour la main (jamais “onboard” dans la main)
+  cardEl.classList.remove('onboard', 'dragging');
+  cardEl.classList.add('spawn'); // petite anim d’arrivée (scopée à .hand)
+
+  // 4) ajouter à la main
+  const hand = document.getElementById(`hand-${player}`);
+  state.hands[player].push(cardEl);
+  hand.appendChild(cardEl);
+
+  // 5) mettre à jour l'éventail + anim d’ensemble si besoin
   layoutHand(player);
+  if (typeof animateNewCard === 'function') animateNewCard(cardEl);
+
+  // 6) UI deck restant
   updateDeckLeft(player);
   return true;
 }
-function drawMany(player,n){for(let i=0;i<n;i++) if(!draw(player)) break;}
+
+function drawMany(player, n){
+  for (let i = 0; i < n; i++) {
+    if (!draw(player)) break;
+  }
+  // re-déploiement joli de la main après pioches multiples
+  if (typeof animateHand === 'function') animateHand(player);
+}
 
 // =======================
 //   LAYOUTS / UI
 // =======================
 function updateDeckLeft(p){const el=document.getElementById(`deck-left-${p}`); if(el) el.textContent=decks[p]?.length??0;}
+
 function layoutHand(player){
-  const hand=document.getElementById(`hand-${player}`);
-  if(!hand)return;
-  const cards=Array.from(hand.querySelectorAll('.card'));
-  hand.style.setProperty('--count',String(cards.length||1));
-  cards.forEach((card,idx)=>card.style.setProperty('--i',String(idx)));
+  const hand = document.getElementById(`hand-${player}`);
+  if (!hand) return;
+  const cards = Array.from(hand.querySelectorAll('.card'));
+  hand.style.setProperty('--count', String(cards.length || 1));
+  cards.forEach((card, idx) => card.style.setProperty('--i', String(idx)));
 }
+
 function relayoutBothHands(){layoutHand('p1');layoutHand('p2');}
 function refreshManaUI(){
   const j1=$("#mana-p1"), j2=$("#mana-p2");
   if(j1)j1.textContent=`${mana.p1.current}/${mana.p1.max}`;
   if(j2)j2.textContent=`${mana.p2.current}/${mana.p2.max}`;
+}
+
+// Déploie joliment une main (stagger)
+function animateHand(player){
+  const hand = document.getElementById(`hand-${player}`);
+  if(!hand) return;
+  hand.classList.add('reveal');
+  // forcer un repaint puis retirer la classe pour déclencher la transition
+  requestAnimationFrame(()=> {
+    requestAnimationFrame(()=> hand.classList.remove('reveal'));
+  });
+}
+
+// Petite animation pour une carte nouvellement piochée
+function animateNewCard(card){
+  if(!card) return;
+  card.classList.add('spawn');
+  requestAnimationFrame(()=> {
+    requestAnimationFrame(()=> card.classList.remove('spawn'));
+  });
+}
+
+function showInspector(card){
+  const insp = document.getElementById('inspector');
+  if(!insp) return;
+
+  const name = card.dataset.name || '—';
+  const owner = (card.dataset.owner === ATT) ? '🌙 Lune (Attaquant)' : '☀️ Soleil (Défenseur)';
+  const atk = card.querySelector('.atk')?.textContent || '—';
+  const hp  = card.querySelector('.hp')?.textContent  || '—';
+  const type = (card.dataset.range === 'ranged') ? 'Distance' : 'Mêlée';
+  const kw = card.dataset.keywords || '—';
+  const desc = card.dataset.desc || '—';
+
+  insp.querySelector('.insp-title').textContent = name;
+  document.getElementById('insp-type').textContent = type;
+  document.getElementById('insp-atk').textContent = atk;
+  document.getElementById('insp-hp').textContent  = hp;
+  document.getElementById('insp-owner').textContent = owner;
+  document.getElementById('insp-desc').textContent  = desc;
+  document.getElementById('insp-kw').textContent    = kw;
+
+  insp.classList.remove('hidden');
+}
+function hideInspector(){
+  const insp = document.getElementById('inspector');
+  if(insp) insp.classList.add('hidden');
+}
+
+function updateHandsVisibility(){
+  // mains
+  const h1 = document.getElementById('hand-p1');
+  const h2 = document.getElementById('hand-p2');
+  h1?.classList.toggle('inactive', turn.current !== ATT);
+  h2?.classList.toggle('inactive', turn.current !== DEF);
+
+  // contrôles
+  const c1 = document.getElementById('controls-p1');
+  const c2 = document.getElementById('controls-p2');
+  c1?.classList.toggle('side-inactive', turn.current !== ATT);
+  c2?.classList.toggle('side-inactive', turn.current !== DEF);
 }
 
 // =======================
@@ -368,6 +535,8 @@ function startTurn(player){
   m.current=m.max;
   refreshManaUI();
   draw(player);
+  animateHand(player);
+  updateHandsVisibility();
 }
 function declareWinner(winner){
   gameOver=true;
@@ -381,9 +550,10 @@ function endTurn(){
     advanceSelective(fired);
     turn.number++;
     if(turn.number>MAX_ROUNDS){declareWinner(DEF);return;}
-  } else {
-    resolveCombat(DEF);
-  }
+    } else {
+      resolveCombat(DEF);
+    }
+  updateHandsVisibility();
   startTurn(turn.current);
 }
 
@@ -395,12 +565,38 @@ function endTurn(){
 // =======================
 //   INTERFACE / NAVIGATION
 // =======================
-function showScreen(id){
-  ["menu-screen","deck-select","gallery","rules","credits","game"].forEach(x=>{
-    document.getElementById(x)?.classList.add("hidden");
+function showScreen(id) {
+  const sections = ["menu-screen","deck-select","gallery","rules","credits","game"];
+
+  // 1) masquer tout
+  sections.forEach(s => {
+    const el = document.getElementById(s);
+    if (el) el.classList.add("hidden");
   });
-  document.getElementById(id)?.classList.remove("hidden");
+
+  // 2) afficher la section demandée
+  const target = document.getElementById(id);
+  if (target) target.classList.remove("hidden");
+
+  // 3) gérer le burger + gros boutons
+  const burger = document.getElementById("burger");
+  const menuButtons = document.querySelector("#menu-screen .menu-buttons");
+  const subtitle = document.querySelector("#menu-screen .subtitle");
+
+  const onMenu = (id === "menu-screen");
+
+  // sur l'accueil : gros menu, pas de burger
+  if (burger) burger.style.display = onMenu ? "none" : "block";
+  if (menuButtons) menuButtons.style.display = onMenu ? "flex" : "none";
+  if (subtitle) subtitle.style.display = onMenu ? "block" : "none";
+
+  // fermer le drawer si on change d'écran
+  const drawer = document.getElementById("menu-drawer");
+  if (drawer) drawer.hidden = true;
+  if (burger) burger.classList.remove("open");
 }
+
+
 
 // =======================
 //   GALERIE DES CARTES
@@ -482,6 +678,9 @@ function initGame(){
   updateDeckLeft("p1"); updateDeckLeft("p2");
   refreshManaUI();
   relayoutBothHands();
+  animateHand('p1');
+  animateHand('p2');
+  updateHandsVisibility();
   $("#end-turn").onclick=endTurn;
 }
 
@@ -496,6 +695,36 @@ function bindMenu(){
   $("#btn-build").onclick=()=>alert("🛠️ Éditeur de deck bientôt disponible !");
 }
 bindMenu();
+// ====== Burger / Drawer ======
+function burgerMenu(){
+  const burger = document.getElementById('burger');
+  const drawer = document.getElementById('menu-drawer');
+  if(!burger || !drawer) return;
+
+  const map = {
+    build:   ()=> document.getElementById('btn-build')  ?.click(),
+    gallery: ()=> document.getElementById('btn-gallery')?.click(),
+    rules:   ()=> document.getElementById('btn-rules')  ?.click(),
+    start:   ()=> document.getElementById('btn-start')  ?.click(),
+    credits: ()=> document.getElementById('btn-credits')?.click(),
+  };
+
+  function open(){ burger.classList.add('open'); burger.setAttribute('aria-expanded','true'); drawer.hidden=false; }
+  function close(){ burger.classList.remove('open'); burger.setAttribute('aria-expanded','false'); drawer.hidden=true; }
+  function toggle(){ (drawer.hidden?open:close)(); }
+
+  burger.addEventListener('click', toggle);
+  document.addEventListener('click', (e)=>{ if(drawer.hidden) return; if(!drawer.contains(e.target) && !burger.contains(e.target)) close(); });
+  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') close(); });
+
+  drawer.querySelectorAll('.drawer-item').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const act = btn.dataset.action;
+      if(map[act]) map[act]();
+      close();
+    });
+  });
+};
 
 // =======================
 //   LANCEMENT INITIAL

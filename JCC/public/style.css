@@ -27,30 +27,68 @@ body{
 /* ===============================
    🏠 MENU PRINCIPAL
    =============================== */
-#menu-screen{
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  text-align:center;
-  gap:14px;
-  padding:20px;
+
+/* --- Centrage complet du menu principal --- */
+#menu-screen {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 18px;
+  width: 100%;
+  max-width: 900px;
+  padding: 0 16px;
 }
-#menu-screen h1{
-  font-size:2.4rem;
-  background:linear-gradient(90deg,var(--accent-blue),var(--accent-gold));
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  text-shadow:0 0 10px rgba(250,250,250,.15);
+
+/* Pour bien centrer le titre + sous-titre + boutons */
+#menu-screen .menu-topbar {
+  flex-direction: column;
+  gap: 10px;
 }
-.subtitle{font-size:1rem; opacity:.85; margin-bottom:14px;}
-.menu-buttons button{
-  background:#1e293b; border:none; color:var(--text);
-  padding:10px 20px; margin:6px;
-  border-radius:10px; font-weight:600; font-size:1rem;
-  cursor:pointer; transition:all .25s ease;
+
+#menu-screen .subtitle {
+  max-width: 700px;
+  font-size: 1rem;
+  opacity: 0.85;
 }
-.menu-buttons button:hover{
-  background:#334155; transform:translateY(-2px);
+
+/* Centrer aussi les boutons horizontalement */
+#menu-screen .menu-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 10px;
 }
-.hidden{display:none;}
+
+/* force le masquage des écrans inactifs */
+.hidden { display: none !important; }
+
+/* Drawer (menu ouvert) reste centré */
+.drawer-card {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(320px, 90vw);
+  padding: 14px;
+  z-index: 9998;
+  background: #0b1324;
+  border: 1px solid #1d2b4a;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.45);
+  backdrop-filter: blur(3px);
+  animation: pop .18s ease-out;
+}
+@keyframes pop { from { opacity: 0; transform: translateY(-10px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
 
 /* ===============================
    ⚙️  SELECTION DECKS / GALERIE / RÈGLES
@@ -204,6 +242,21 @@ header{
 .card:hover{transform:scale(1.06); box-shadow:0 15px 25px rgba(0,0,0,.6); z-index:10;}
 .card img{display:none;}
 .card .overlay{position:absolute; inset:0; background:linear-gradient(to bottom,rgba(0,0,0,.15),rgba(0,0,0,.45));}
+.card .info{
+  position:absolute;
+  bottom:30px;
+  width:90%;
+  font-size:.65rem;
+  line-height:1.2;
+  text-align:center;
+  color:#fff;
+  text-shadow:0 1px 2px #000;
+  white-space:normal;       /* ✅ autorise les retours à la ligne */
+  overflow-wrap:break-word; /* ✅ casse les mots longs */
+  max-height:55px;          /* ✅ évite que le texte dépasse du cadre */
+  overflow:hidden;          /* ✅ masque l’excédent */
+}
+
 
 /* Infos carte */
 .cost{
@@ -230,31 +283,82 @@ header{
 /* ===============================
    💫  MAINS & CONTROLES
    =============================== */
-.hand-container{position:relative; display:flex; justify-content:center; align-items:flex-end;
-  margin:0 auto; perspective:1200px; height:180px; overflow:visible;}
+/* ========== Mains en éventail (style du script fourni) ========== */
+.hand-container{
+  position:relative;
+  display:flex; justify-content:center; align-items:flex-end;
+  margin:0 auto; perspective:1200px; height:180px; overflow:visible;
+}
+
 .hand{
-  --count:1; position:relative; display:flex; align-items:flex-end; justify-content:center;
+  --count:1;
+  position:relative; display:flex; align-items:flex-end; justify-content:center;
   transform-style:preserve-3d; gap:0; padding-bottom:12px;
 }
+
+/* éventail : rotation autour du bas + légère courbe verticale */
 .hand .card{
-  --i:0; --spread:28deg; --lift:28px; --w:clamp(92px,10vw,140px);
-  width:var(--w); aspect-ratio:63/88; transform-origin:bottom center; margin:0 -22px;
-  transition:transform .2s, z-index .2s, box-shadow .2s;
+  --i:0; 
+  --spread:28deg;   /* ouverture horizontale */
+  --lift:28px;      /* amplitude de la courbe */
+  --center:12px;    /* 💡 surélévation du centre */
+  --w:clamp(92px,10vw,140px);
+  width:var(--w); 
+  aspect-ratio:63/88;
+  transform-origin:bottom center;
+  margin:0 -22px;
+  transition: transform .35s cubic-bezier(.45, .02, .28, 1.12);
   z-index:calc(100 + var(--i));
-  transform:rotateZ(calc(var(--spread)*((var(--i)-(var(--count)-1)/2)/max(var(--count)-1,1))))
-           translateY(calc(-1*var(--lift)*abs((var(--i)-(var(--count)-1)/2)/max(var(--count)-1,1))));
+
+  /* éventail avec courbe + centre légèrement surélevé */
+  transform:
+    rotateZ(calc(var(--spread) * ((var(--i) - (var(--count) - 1)/2) / max(var(--count) - 1, 1))))
+    translateY(
+      calc(
+        -1 * (
+          var(--lift) * abs((var(--i) - (var(--count) - 1)/2) / max(var(--count) - 1, 1))
+          - var(--center) * (1 - abs((var(--i) - (var(--count) - 1)/2) / max(var(--count) - 1, 1)))
+        )
+      )
+    );
 }
-.hand .card:hover{transform:rotateZ(0deg) translateY(-60px) scale(1.1);
-  z-index:999; box-shadow:0 14px 30px rgba(0,0,0,.55),0 0 0 3px rgba(103,232,249,.35);}
-.controls{display:flex; justify-content:space-around; flex-wrap:wrap; margin-top:12px; gap:8px;}
-button{background:#1e293b; color:#e2e8f0; border:none; border-radius:6px; padding:6px 10px; font-weight:600; cursor:pointer;}
-button:hover{background:#334155;}
-.badge{display:inline-flex; align-items:center; gap:6px; padding:6px 10px;
-  border-radius:999px; background:#0f1b2d; border:1px solid #1f2c46;
-  font-size:.85rem; color:#e6edf6; margin-left:8px;}
-.mana-badge{border-color:var(--accent-gold);}
-.turn-active{box-shadow:0 0 0 3px rgba(250,204,21,.35); border-radius:12px;}
-#controls-p1, #controls-p2{transition:opacity 0.4s ease;}
+
+/* survol : carte redressée et avancée */
+.hand .card:hover{
+  transform: rotateZ(0deg) translateY(-60px) scale(1.1);
+  z-index:999;
+  box-shadow:0 14px 30px rgba(0,0,0,.55), 0 0 0 3px rgba(103,232,249,.35);
+}
+
+/* plateau : jamais de rotation/éventail (important) */
+.lanes .card, .slot .card, .card.onboard{
+  position: static !important;
+  left: auto !important;
+  transform: none !important;
+  margin: 0 !important;
+  opacity: 1 !important;
+}
+.lanes .card:hover, .slot .card:hover, .card.onboard:hover{
+  transform: translateY(-2px) scale(1.02) !important;
+}
+
+/* Anim main uniquement */
+.hand.reveal .card { opacity: 0; transform: translateY(90px) scale(.88) rotateZ(0) !important; }
+.hand .card.spawn   { opacity: 0; transform: translateY(80px) scale(.9)  rotateZ(0) !important; }
+
+
+/* Déploiement de la main : au départ on force un état "replié" */
+.hand.reveal .card{
+  opacity: 0;
+  transform: translateY(90px) scale(.88) rotateZ(0deg) !important;
+  transition-delay: 0ms !important; /* tout part en même temps */
+}
+
+/* Apparition d'une carte fraîchement piochée */
+.card.spawn{
+  opacity: 0;
+  transform: translateY(80px) scale(.9) rotateZ(0deg) !important;
+}
 
 /* ===============================
    🌀  ANIMATIONS & FEEDBACK
@@ -265,3 +369,91 @@ button:hover{background:#334155;}
 .card.buff-perm{outline:2px solid #d4af37; outline-offset:-2px;}
 .card.buff-temp{outline:2px solid #3ea0ff; outline-offset:-2px;}
 .card.locked{cursor:not-allowed;}
+
+/* --- Inspecteur (panneau d'info) --- */
+#inspector{
+  position:fixed; right:16px; top:16px; bottom:16px;
+  width:320px; max-width:38vw; background:#0b1324; color:#eaf0ff;
+  border:1px solid #1d2b4a; border-radius:12px; padding:14px 14px 10px;
+  overflow:auto; box-shadow:0 12px 40px rgba(0,0,0,.35); z-index:9990;
+}
+#inspector.hidden{ display:none; }
+#inspector .insp-title{ font-weight:800; font-size:18px; margin-bottom:6px; }
+#inspector .insp-body{ font-size:13px; line-height:1.4; }
+#inspector .muted{ color:#9fb2d9; }
+#inspector .sep{ height:1px; background:#1d2b4a; margin:10px 0; }
+#inspector .kw{
+  background:#0f1a33; border:1px solid #23355c; border-radius:8px;
+  padding:8px; margin:8px 0;
+}
+#inspector .kw b{ color:#bcd3ff; }
+#inspector .insp-stats{
+  background:#101a32; border:1px solid #23355c; border-radius:8px;
+  padding:6px 10px; margin:8px 0 6px; text-align:center; font-weight:600; font-size:14px;
+}
+#inspector .type-label { color:#fbbf24; margin-right:6px; font-weight:700; }
+#inspector .type-val   { color:#fde68a; font-weight:600; }
+#inspector .atk-label{ color:#f87171; margin-right:2px; }
+#inspector .hp-label{ color:#60a5fa; margin-left:10px; margin-right:2px; }
+#inspector .atk-val{ color:#fca5a5; }
+#inspector .hp-val{ color:#bfdbfe; }
+
+/* Alternance mains/contrôles au tour actif */
+.hand.inactive { opacity:.35; filter:saturate(.6); }
+.controls .side-inactive { opacity:.35; }
+
+/* ===============================
+   🎛️  CONTROLES + BOUTONS + BADGES
+   =============================== */
+.controls{
+  display:flex; justify-content:space-between; align-items:center;
+  gap:10px; margin-top:4px;
+}
+
+.badge{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 10px; border-radius:999px;
+  background:#0f1b2d; border:1px solid #1f2c46;
+  color:#e6edf6; font-size:.9rem;
+}
+.mana-badge{ border-color:#facc15; }
+
+/* boutons robustes cross-browser */
+button{
+  -webkit-appearance:none; appearance:none;
+  background:#1e293b; color:#e2e8f0;
+  border:1px solid #263449; border-radius:10px;
+  padding:8px 14px; font-weight:700; font-size:.95rem; line-height:1;
+  cursor:pointer; transition:transform .12s ease, background .15s ease, box-shadow .15s ease;
+  box-shadow:0 2px 8px rgba(0,0,0,.25);
+}
+button:hover{ background:#334155; transform:translateY(-1px); box-shadow:0 6px 14px rgba(0,0,0,.35); }
+button:active{ transform:translateY(0); }
+button:disabled{ background:#0f172a; color:#94a3b8; border-color:#1f2a44; cursor:not-allowed; box-shadow:none; }
+
+/* bouton fin de tour : léger accent doré/bleu */
+#end-turn{
+  border-color:#2a3a57;
+  box-shadow:0 2px 10px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.04);
+}
+#end-turn::before{ content:"⏭️ "; }
+#end-turn:hover{
+  background:linear-gradient(180deg,#1f2f49,#1b263d);
+  box-shadow:0 8px 18px rgba(0,0,0,.35);
+}
+
+/* état côté inactif (si tu l’utilises dans le JS) */
+.controls .side-inactive{ opacity:.35; filter:saturate(.7); }
+
+/* accessibilité focus */
+button:focus-visible{ outline:2px solid #93c5fd; outline-offset:2px; }
+button::-moz-focus-inner{ border:0; padding:0; }
+
+/* ===== Topbar + Burger ===== */
+.menu-topbar{ position:relative; display:flex; justify-content:center; align-items:center; gap:12px; }
+#game-title{
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  background: linear-gradient(90deg, var(--accent-blue), var(--accent-gold));
+  -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  text-shadow:0 0 10px rgba(250,250,250,.15); margin:0;
+}
