@@ -1,61 +1,131 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Duel des Royaumes – Orientation Horizontale</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lune vs Soleil – Bataille Astrale</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="table">
-    <header>
-      <div class="tag def">Défenseur (J2)</div>
-      <div class="hint">
-        3 colonnes Attaque · 2 Neutres · 5 Défense —
-        Piocher → Drag & drop vers une case · ⏭️ Fin de tour · N = avance attaquants (→)
-      </div>
-      <div class="tag att">Attaquant (J1)</div>
-    </header>
 
-    <section class="battlefield">
-      <div id="lanes" class="lanes"></div>
-    </section>
-
-    <!-- Main Défenseur (haut) -->
-    <div class="hand-container hand-def">
-      <div id="hand-p2" class="hand"></div>
-    </div>
-
-    <!-- Main Attaquant (bas) -->
-    <div class="hand-container hand-att">
-      <div id="hand-p1" class="hand"></div>
-    </div>
-
-    <!-- ⬆️ Contrôles J2 (défenseur) -->
-  <div class="controls">
-    <div id="controls-p2">
-      <span class="badge">Deck: <strong id="deck-left-p2">0</strong></span>
-      <span class="badge mana-badge">Mana J2: <strong id="mana-p2">1/1</strong></span>
-    </div>
-
-    <!-- Infos centrales -->
-    <div>
-      <span class="badge">Manche: <strong id="round-num">1 / 20</strong></span>
-    </div>
-
-    <!-- Bouton global (toujours visible) -->
-    <div>
-      <button id="end-turn">⏭️ Fin de tour</button>
-    </div>
-
-    <!-- ⬇️ Contrôles J1 (attaquant) -->
-    <div id="controls-p1">
-      <span class="badge">Deck: <strong id="deck-left-p1">0</strong></span>
-      <span class="badge mana-badge">Mana J1: <strong id="mana-p1">1/1</strong></span>
+  <!-- 🌙☀️ MENU PRINCIPAL -->
+  <div id="menu-screen">
+    <h1>⚔️ Lune vs Soleil – Bataille Astrale ⚔️</h1>
+    <p class="subtitle">Choisissez votre voie et affrontez les forces opposées de la lumière et de l’ombre.</p>
+    <div class="menu-buttons">
+      <button id="btn-build">🎴 Créer un deck</button>
+      <button id="btn-gallery">📚 Voir les cartes</button>
+      <button id="btn-rules">⚙️ Règles</button>
+      <button id="btn-start">🕹️ Lancer une partie</button>
+      <button id="btn-credits">💠 Crédits</button>
     </div>
   </div>
 
-  </main>
+  <!-- 🧩 SÉLECTION DECKS -->
+  <div id="deck-select" class="hidden">
+    <h2>Sélection des decks</h2>
+    <div class="deck-choice">
+      <div class="player-choice">
+        <h3>🌙 Joueur 1 — Lune (Attaquant)</h3>
+        <label><input type="radio" name="deck-p1" value="classique" checked> Deck Classique — équilibré</label><br>
+        <label><input type="radio" name="deck-p1" value="mana"> Deck Mana — axé sur la croissance</label><br>
+        <label><input type="radio" name="deck-p1" value="coop"> Deck Coopération — synergie d’équipe</label>
+      </div>
+      <div class="player-choice">
+        <h3>☀️ Joueur 2 — Soleil (Défenseur)</h3>
+        <label><input type="radio" name="deck-p2" value="classique" checked> Deck Classique — équilibré</label><br>
+        <label><input type="radio" name="deck-p2" value="mana"> Deck Mana — axé sur la croissance</label><br>
+        <label><input type="radio" name="deck-p2" value="coop"> Deck Coopération — synergie d’équipe</label>
+      </div>
+    </div>
+    <button id="btn-launch-game">🚀 Lancer la bataille</button>
+    <button class="back" onclick="showScreen('menu-screen')">⬅ Retour</button>
+  </div>
+
+  <!-- 📚 GALERIE -->
+  <div id="gallery" class="hidden">
+    <h2>📚 Galerie des cartes</h2>
+    <p>Chaque carte possède deux faces : <strong>Lune (Attaquant)</strong> et <strong>Soleil (Défenseur)</strong>.</p>
+    <div id="card-gallery"></div>
+    <button class="back" onclick="showScreen('menu-screen')">⬅ Retour</button>
+  </div>
+
+  <!-- ⚙️ RÈGLES -->
+  <div id="rules" class="hidden">
+    <h2>⚙️ Règles du jeu</h2>
+    <p>Deux joueurs s’affrontent sur un plateau 10×5 :</p>
+    <ul>
+      <li>🌙 <strong>Lune (Attaquant)</strong> commence à gauche et avance vers la droite.</li>
+      <li>☀️ <strong>Soleil (Défenseur)</strong> protège la droite du plateau.</li>
+      <li>Chaque carte a un coût en Mana, une attaque (ATK) et des points de vie (HP).</li>
+      <li>Les tours alternent : Attaquant → Défenseur → Résolution du combat.</li>
+      <li>Les attaques sont simultanées ; les cartes qui n’ont pas attaqué avancent d’une case.</li>
+    </ul>
+    <h3>🌟 Mots-clés principaux :</h3>
+    <ul>
+      <li><b>Célérité</b> — Peut avancer de +1 case par tour.</li>
+      <li><b>Photosynthèse</b> — Donne +1 mana par tour.</li>
+      <li><b>Coopération</b> — Bonus si des alliés sont sur la même ligne.</li>
+      <li><b>Paralysie</b> — Empêche une carte d’agir pendant X tours.</li>
+      <li><b>Perçant</b> — Inflige ses dégâts à plusieurs ennemis sur la ligne.</li>
+      <li><b>Buff</b> — Améliore temporairement ou définitivement les statistiques d’une unité.</li>
+    </ul>
+    <h3>🏆 Conditions de victoire :</h3>
+    <ul>
+      <li>🌙 Lune gagne si 2 unités atteignent la dernière colonne (percée).</li>
+      <li>☀️ Soleil gagne si 20 tours sont écoulés.</li>
+    </ul>
+    <button class="back" onclick="showScreen('menu-screen')">⬅ Retour</button>
+  </div>
+
+  <!-- 💠 CRÉDITS -->
+  <div id="credits" class="hidden">
+    <h2>💠 Crédits</h2>
+    <p><strong>Lune vs Soleil – Bataille Astrale</strong></p>
+    <p>Prototype créé par <b>Loïc Marion</b> & <b>ChatGPT (OpenAI)</b></p>
+    <p>Développement : 2025</p>
+    <p>Code & mécaniques : ChatGPT</p>
+    <p>Univers & équilibrage : Loïc Marion</p>
+    <p>Thème visuel : Ambiance bleue et dorée minimaliste</p>
+    <button class="back" onclick="showScreen('menu-screen')">⬅ Retour</button>
+  </div>
+
+  <!-- 🪐 ZONE DE JEU -->
+  <div id="game" class="hidden">
+    <div class="table">
+      <header>
+        <div class="tag att">🌙 Lune</div>
+        <div class="hint">Phase de jeu</div>
+        <div class="tag def">☀️ Soleil</div>
+      </header>
+
+      <div class="battlefield">
+        <div id="lanes" class="lanes"></div>
+      </div>
+
+      <!-- Mains -->
+      <div class="hand-container">
+        <div id="hand-p1" class="hand hand-att"></div>
+      </div>
+      <div class="hand-container">
+        <div id="hand-p2" class="hand hand-def"></div>
+      </div>
+
+      <!-- Contrôles -->
+      <div class="controls">
+        <div id="controls-p1">
+          <span class="badge">Deck: <strong id="deck-left-p1">0</strong></span>
+          <span class="badge mana-badge">Mana 🌙: <strong id="mana-p1">1/1</strong></span>
+        </div>
+        <button id="end-turn">⏭️ Fin de tour</button>
+        <div id="controls-p2">
+          <span class="badge">Deck: <strong id="deck-left-p2">0</strong></span>
+          <span class="badge mana-badge">Mana ☀️: <strong id="mana-p2">1/1</strong></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
