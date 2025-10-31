@@ -11,6 +11,10 @@
   --gap:10px;
   --rad:12px;
   --card-w:clamp(72px,8.5vw,110px);
+  /* chemins vers tes deux fonds */
+  --att-bg: url("images/fond-lune.png");
+  --def-bg: url("images/fond-soleil.png");
+
 }
 
 *{box-sizing:border-box;}
@@ -229,7 +233,8 @@ header{
 .card{
   width:92%; aspect-ratio:63/88;
   border-radius:calc(var(--rad)-2px);
-  background:url("carteJCC.png") center/cover no-repeat;
+  /* ⬇️ utilise une variable CSS pour l'image de fond, avec fallback */
+  background: var(--card-bg, url("carteJCC.png")) center/cover no-repeat;
   border:2px solid transparent;
   display:grid; place-items:center;
   position:relative; font-weight:700; text-transform:uppercase;
@@ -237,8 +242,9 @@ header{
   user-select:none; cursor:grab; overflow:hidden;
   transition:transform .2s, box-shadow .2s;
 }
-.card.att{filter:hue-rotate(-15deg) brightness(1.1);}
-.card.def{filter:hue-rotate(210deg) brightness(1.1);}
+
+.card.att{filter:hue-rotate(-15deg) brightness(1.1);--card-bg: var(--att-bg); filter:hue-rotate(-15deg) brightness(1.1);}
+.card.def{filter:hue-rotate(210deg) brightness(1.1);--card-bg: var(--def-bg); filter:hue-rotate(210deg) brightness(1.1);}
 .card:hover{transform:scale(1.06); box-shadow:0 15px 25px rgba(0,0,0,.6); z-index:10;}
 .card img{display:none;}
 .card .overlay{position:absolute; inset:0; background:linear-gradient(to bottom,rgba(0,0,0,.15),rgba(0,0,0,.45));}

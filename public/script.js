@@ -31,101 +31,65 @@ const nextManaBonus = { p1: 0, p2: 0 };
 // ============================================================
 const CARDS = [
   {
-    nom: "Éclaireur Astral",
+    nom: "",
     indeck: 3,
-    attacker: { cost: 2, attack: 2, hp: 6, attackType: "melee", keywords:["celerite:1","cooperation:2"], description:"Rapide et précis. +1 ATK s’il a des alliés sur la ligne." },
-    defender: { cost: 2, attack: 1, hp: 8, attackType: "ranged", keywords:["paralysie:1"], description:"Tire à distance ; paralyse la cible 1 tour." }
+    attacker: { cost: 1, attack: 1, hp: 5, attackType: "melee", keywords:["vanilla"], description:"" },
+    defender: { cost: 1, attack: 1, hp: 1, attackType: "ranged", keywords:["vanilla"], description:"" }
   },
   {
-    nom: "Guerrier d’Argent",
+    nom: "",
     indeck: 3,
-    attacker: { cost: 3, attack: 3, hp: 9, attackType: "melee", keywords:["buff:row"], description:"Octroie +1 ATK aux alliés de la ligne ce tour." },
-    defender: { cost: 3, attack: 2, hp: 10, attackType: "melee", keywords:["photosynthese:1"], description:"+1 mana / tour ; solide en défense." }
+    attacker: { cost: 2, attack: 2, hp: 9, attackType: "melee", keywords:["vanilla"], description:"" },
+    defender: { cost: 2, attack: 2, hp: 2, attackType: "ranged", keywords:["vanilla"], description:"" }
   },
   {
-    nom: "Prêtresse Stellaire",
+    nom: "",
     indeck: 2,
-    attacker: { cost: 3, attack: 2, hp: 9, attackType: "ranged", keywords:["photosynthese:1","heal:1"], description:"+1 mana / tour et soigne 1 PV à un allié proche." },
-    defender: { cost: 3, attack: 3, hp: 10, attackType: "ranged", keywords:["photosynthese:2"], description:"+2 mana / tour tant qu’elle est en jeu." }
+    attacker: { cost: 3, attack: 2, hp: 13, attackType: "melee", keywords:["vanilla"], description:"" },
+    defender: { cost: 3, attack: 3, hp: 2, attackType: "ranged", keywords:["vanilla"], description:"" }
   },
   {
-    nom: "Lame Spectrale",
+    nom: "",
     indeck: 2,
-    attacker: { cost: 4, attack: 5, hp: 8, attackType: "melee", keywords:["percant"], description:"Ses attaques traversent les ennemis." },
-    defender: { cost: 4, attack: 3, hp: 12, attackType: "melee", keywords:["paralysie:1"], description:"Frappe et ralentit l’adversaire." }
+    attacker: { cost: 4, attack: 3, hp: 17, attackType: "melee", keywords:["vanilla"], description:"" },
+    defender: { cost: 4, attack: 4, hp: 3, attackType: "ranged", keywords:["vanilla"], description:"" }
   },
   {
-    nom: "Protecteur des Lunes",
+    nom: "",
     indeck: 2,
-    attacker: { cost: 4, attack: 1, hp: 14, attackType: "melee", keywords:["buff:behind"], description:"+2 HP aux alliés derrière lui." },
-    defender: { cost: 4, attack: 2, hp: 15, attackType: "melee", keywords:["buff:row"], description:"+1 HP à toute la ligne." }
+    attacker: { cost: 5, attack: 3, hp: 21, attackType: "melee", keywords:["vanilla"], description:"" },
+    defender: { cost: 5, attack: 5, hp: 3, attackType: "ranged", keywords:["vanilla"], description:"" }
   },
   {
-    nom: "Messager d’Aurore",
+    nom: "",
     indeck: 3,
-    attacker: { cost: 2, attack: 3, hp: 4, attackType: "melee", keywords:["celerite:2"], description:"Avance de 2 cases ; fragile." },
-    defender: { cost: 2, attack: 2, hp: 6, attackType: "ranged", keywords:["paralysie:1"], description:"Tire à distance et ralentit." }
+    attacker: { cost: 2, attack: 1, hp: 12, attackType: "melee", keywords:[""], description:"" },
+    defender: { cost: 2, attack: 0, hp: 7, attackType: "ranged", keywords:[""], description:"" }
   },
   {
-    nom: "Loup Stellaire",
+    nom: "Lancier éclaireur",
+    indeck: 3,
+    attacker: { cost: 1, attack: 1, hp: 2, attackType: "melee", keywords:["celerite:1"], description:"Quand cette carte détruit une défense, piochez une carte." },
+    defender: { cost: 3, attack: 5, hp: 1, attackType: "melee", keywords:[""], description:"" }
+  },
+  {
+    nom: "Assassin scelleur",
     indeck: 2,
-    attacker: { cost: 3, attack: 3, hp: 7, attackType: "melee", keywords:["celerite:1","selfbuff"], description:"+1 ATK après chaque élimination." },
-    defender: { cost: 3, attack: 2, hp: 11, attackType: "melee", keywords:["coop:1"], description:"+1 HP si alliés sur la ligne." }
+    attacker: { cost: 3, attack: 3, hp: 3, attackType: "melee", keywords:["celerite:1"], description:"" },
+    defender: { cost: 3, attack: 1, hp: 4, attackType: "ranged", keywords:["paralysie:1"], description:"" }
   },
   {
-    nom: "Oracle des Marées",
+    nom: "Assassin maître des sceaux",
     indeck: 2,
-    attacker: { cost: 5, attack: 2, hp: 10, attackType: "ranged", keywords:["photosynthese:2","heal:row"], description:"Soigne toute la ligne (+2 HP) et +2 mana / tour." },
-    defender: { cost: 5, attack: 3, hp: 12, attackType: "ranged", keywords:["mana:2"], description:"+2 mana instantané à l’entrée en jeu." }
+    attacker: { cost: 3, attack: 3, hp: 3, attackType: "melee", keywords:["celerite:2"], description:"" },
+    defender: { cost: 3, attack: 1, hp: 4, attackType: "ranged", keywords:["paralysie:3"], description:"Lorsque cette carte meurt, inflige Paralysie (3) à un attaquant sur une case adjacente" }
   },
   {
-    nom: "Arbalétrier Radieux",
+    nom: "Assassin maître des sceaux",
     indeck: 2,
-    attacker: { cost: 3, attack: 2, hp: 8, attackType: "ranged", keywords:["percant"], description:"Attaque à distance et traverse les cibles." },
-    defender: { cost: 3, attack: 3, hp: 9, attackType: "ranged", keywords:["paralysie:1"], description:"Frappe à distance et paralyse sa cible." }
+    attacker: { cost: 3, attack: 3, hp: 3, attackType: "melee", keywords:["celerite:2"], description:"" },
+    defender: { cost: 3, attack: 1, hp: 4, attackType: "ranged", keywords:["paralysie:3"], description:"Lorsque cette carte meurt, inflige Paralysie (3) à un attaquant sur une case adjacente" }
   },
-  {
-    nom: "Clerc de Lumière",
-    indeck: 2,
-    attacker: { cost: 3, attack: 1, hp: 10, attackType: "ranged", keywords:["heal:row"], description:"Soigne tous les alliés de la ligne (+1 HP)." },
-    defender: { cost: 3, attack: 2, hp: 12, attackType: "ranged", keywords:["photosynthese:1"], description:"+1 mana par tour." }
-  },
-  {
-    nom: "Champion Écliptique",
-    indeck: 1,
-    attacker: { cost: 5, attack: 5, hp: 12, attackType: "melee", keywords:["cooperation:3","percant"], description:"Si 3 alliés sur la ligne, attaque perçante." },
-    defender: { cost: 5, attack: 4, hp: 15, attackType: "melee", keywords:["buff:row","paralysie:1"], description:"Paralyse et buff alliés de la ligne." }
-  },
-  {
-    nom: "Défenseur Céleste",
-    indeck: 2,
-    attacker: { cost: 4, attack: 3, hp: 14, attackType: "melee", keywords:["tank"], description:"Bloque l’avancée ennemie." },
-    defender: { cost: 4, attack: 2, hp: 18, attackType: "melee", keywords:["paralysie:1"], description:"Frappe et ralentit les assaillants." }
-  },
-  {
-    nom: "Sorcier du Zénith",
-    indeck: 2,
-    attacker: { cost: 4, attack: 4, hp: 8, attackType: "ranged", keywords:["mana:1"], description:"+1 mana quand il entre en jeu." },
-    defender: { cost: 4, attack: 3, hp: 10, attackType: "ranged", keywords:["photosynthese:1"], description:"+1 mana / tour." }
-  },
-  {
-    nom: "Gardien du Zénith",
-    indeck: 1,
-    attacker: { cost: 6, attack: 6, hp: 14, attackType: "melee", keywords:["buff:row","percant"], description:"Buff toute la ligne (+1 ATK/+2 HP) et percant 1 tour." },
-    defender: { cost: 6, attack: 4, hp: 18, attackType: "melee", keywords:["buff:row:perm"], description:"Buff permanent +1 ATK/+2 HP à la ligne." }
-  },
-  {
-    nom: "Jugement Solaire",
-    indeck: 1,
-    attacker: { cost: 7, attack: 7, hp: 12, attackType: "ranged", keywords:["percant","doubleattaque"], description:"Frappe deux fois par tour ; attaque toute la ligne." },
-    defender: { cost: 7, attack: 6, hp: 16, attackType: "ranged", keywords:["aoe:row"], description:"Inflige des dégâts à toute la ligne ennemie." }
-  },
-  {
-    nom: "Protecteur Écliptique",
-    indeck: 1,
-    attacker: { cost: 7, attack: 3, hp: 20, attackType: "melee", keywords:["defense","buff:behind"], description:"Protège les alliés derrière et réduit les dégâts subis." },
-    defender: { cost: 7, attack: 5, hp: 18, attackType: "melee", keywords:["percant"], description:"Attaque puissante qui traverse les défenses." }
-  }
 ];
 
 

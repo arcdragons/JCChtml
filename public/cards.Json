@@ -1,74 +1,100 @@
-[
+// ============================================================
+// Fichier de données des cartes 
+carte = [
   {
-    "id": "forteresse",
-    "image": "assets/forteresse.png",
-    "attacker": {
-      "name": "Bélier",
-      "cost": 3,
-      "attack": 3,
-      "hp": 2,
-      "description": "Avance et inflige 1 dégât aux tourelles."
-    },
-    "defender": {
-      "name": "Forteresse",
-      "cost": 3,
-      "attack": 0,
-      "hp": 5,
-      "description": "Bloque une ligne et absorbe 5 dégâts."
-    }
+    nom: "",
+    indeck: 3,
+    attacker: { cost: 1, attack: 1, hp: 5, attackType: "melee", keywords:["vanilla"], description:"" },
+    defender: { cost: 1, attack: 1, hp: 1, attackType: "ranged", keywords:["vanilla"], description:"" }
   },
   {
-    "id": "archer",
-    "image": "assets/archer.png",
-    "attacker": {
-      "name": "Archer",
-      "cost": 2,
-      "attack": 2,
-      "hp": 1,
-      "description": "Inflige 1 dégât à distance."
-    },
-    "defender": {
-      "name": "Guetteur",
-      "cost": 2,
-      "attack": 1,
-      "hp": 2,
-      "description": "Tire automatiquement sur les unités avancées."
-    }
+    nom: "",
+    indeck: 3,
+    attacker: { cost: 2, attack: 2, hp: 9, attackType: "melee", keywords:["vanilla"], description:"" },
+    defender: { cost: 2, attack: 2, hp: 2, attackType: "ranged", keywords:["vanilla"], description:"" }
   },
   {
-    "id": "mage",
-    "image": "assets/mage.png",
-    "attacker": {
-      "name": "Pyromancien",
-      "cost": 4,
-      "attack": 4,
-      "hp": 2,
-      "description": "Inflige 2 dégâts à une cible sur sa ligne."
-    },
-    "defender": {
-      "name": "Sorcier de Garde",
-      "cost": 4,
-      "attack": 2,
-      "hp": 3,
-      "description": "Inflige 1 dégât aux attaquants proches chaque tour."
-    }
+    nom: "",
+    indeck: 2,
+    attacker: { cost: 3, attack: 2, hp: 13, attackType: "melee", keywords:["vanilla"], description:"" },
+    defender: { cost: 3, attack: 3, hp: 2, attackType: "ranged", keywords:["vanilla"], description:"" }
   },
   {
-    "id": "fantassin",
-    "image": "assets/fantassin.png",
-    "attacker": {
-      "name": "Fantassin",
-      "cost": 1,
-      "attack": 1,
-      "hp": 2,
-      "description": "Unité de base peu coûteuse."
-    },
-    "defender": {
-      "name": "Soldat",
-      "cost": 1,
-      "attack": 1,
-      "hp": 3,
-      "description": "Protège la première ligne."
-    }
+    nom: "",
+    indeck: 2,
+    attacker: { cost: 4, attack: 3, hp: 17, attackType: "melee", keywords:["vanilla"], description:"" },
+    defender: { cost: 4, attack: 4, hp: 3, attackType: "ranged", keywords:["vanilla"], description:"" }
+  },
+  {
+    nom: "",
+    indeck: 2,
+    attacker: { cost: 5, attack: 3, hp: 21, attackType: "melee", keywords:["vanilla"], description:"" },
+    defender: { cost: 5, attack: 5, hp: 3, attackType: "ranged", keywords:["vanilla"], description:"" }
+  },
+  {
+    nom: "",
+    indeck: 3,
+    attacker: { cost: 2, attack: 1, hp: 12, attackType: "melee", keywords:["celerite:2"], description:"Avance de 2 cases ; fragile." },
+    defender: { cost: 2, attack: 0, hp: 7, attackType: "ranged", keywords:["paralysie:1"], description:"Tire à distance et ralentit." }
+  },
+  {
+    nom: "",
+    indeck: 2,
+    attacker: { cost: 3, attack: 3, hp: 7, attackType: "melee", keywords:["celerite:1","selfbuff"], description:"+1 ATK après chaque élimination." },
+    defender: { cost: 3, attack: 2, hp: 11, attackType: "melee", keywords:["coop:1"], description:"+1 HP si alliés sur la ligne." }
+  },
+  {
+    nom: "",
+    indeck: 2,
+    attacker: { cost: 5, attack: 2, hp: 10, attackType: "ranged", keywords:["photosynthese:2","heal:row"], description:"Soigne toute la ligne (+2 HP) et +2 mana / tour." },
+    defender: { cost: 5, attack: 3, hp: 12, attackType: "ranged", keywords:["mana:2"], description:"+2 mana instantané à l’entrée en jeu." }
+  },
+  {
+    nom: "Arbalétrier Radieux",
+    indeck: 2,
+    attacker: { cost: 3, attack: 2, hp: 8, attackType: "ranged", keywords:["percant"], description:"Attaque à distance et traverse les cibles." },
+    defender: { cost: 3, attack: 3, hp: 9, attackType: "ranged", keywords:["paralysie:1"], description:"Frappe à distance et paralyse sa cible." }
+  },
+  {
+    nom: "Clerc de Lumière",
+    indeck: 2,
+    attacker: { cost: 3, attack: 1, hp: 10, attackType: "ranged", keywords:["heal:row"], description:"Soigne tous les alliés de la ligne (+1 HP)." },
+    defender: { cost: 3, attack: 2, hp: 12, attackType: "ranged", keywords:["photosynthese:1"], description:"+1 mana par tour." }
+  },
+  {
+    nom: "Champion Écliptique",
+    indeck: 1,
+    attacker: { cost: 5, attack: 5, hp: 12, attackType: "melee", keywords:["cooperation:3","percant"], description:"Si 3 alliés sur la ligne, attaque perçante." },
+    defender: { cost: 5, attack: 4, hp: 15, attackType: "melee", keywords:["buff:row","paralysie:1"], description:"Paralyse et buff alliés de la ligne." }
+  },
+  {
+    nom: "Défenseur Céleste",
+    indeck: 2,
+    attacker: { cost: 4, attack: 3, hp: 14, attackType: "melee", keywords:["tank"], description:"Bloque l’avancée ennemie." },
+    defender: { cost: 4, attack: 2, hp: 18, attackType: "melee", keywords:["paralysie:1"], description:"Frappe et ralentit les assaillants." }
+  },
+  {
+    nom: "Sorcier du Zénith",
+    indeck: 2,
+    attacker: { cost: 4, attack: 4, hp: 8, attackType: "ranged", keywords:["mana:1"], description:"+1 mana quand il entre en jeu." },
+    defender: { cost: 4, attack: 3, hp: 10, attackType: "ranged", keywords:["photosynthese:1"], description:"+1 mana / tour." }
+  },
+  {
+    nom: "Gardien du Zénith",
+    indeck: 1,
+    attacker: { cost: 6, attack: 6, hp: 14, attackType: "melee", keywords:["buff:row","percant"], description:"Buff toute la ligne (+1 ATK/+2 HP) et percant 1 tour." },
+    defender: { cost: 6, attack: 4, hp: 18, attackType: "melee", keywords:["buff:row:perm"], description:"Buff permanent +1 ATK/+2 HP à la ligne." }
+  },
+  {
+    nom: "Jugement Solaire",
+    indeck: 1,
+    attacker: { cost: 7, attack: 7, hp: 12, attackType: "ranged", keywords:["percant","doubleattaque"], description:"Frappe deux fois par tour ; attaque toute la ligne." },
+    defender: { cost: 7, attack: 6, hp: 16, attackType: "ranged", keywords:["aoe:row"], description:"Inflige des dégâts à toute la ligne ennemie." }
+  },
+  {
+    nom: "Protecteur Écliptique",
+    indeck: 1,
+    attacker: { cost: 7, attack: 3, hp: 20, attackType: "melee", keywords:["defense","buff:behind"], description:"Protège les alliés derrière et réduit les dégâts subis." },
+    defender: { cost: 7, attack: 5, hp: 18, attackType: "melee", keywords:["percant"], description:"Attaque puissante qui traverse les défenses." }
   }
-]
+];
